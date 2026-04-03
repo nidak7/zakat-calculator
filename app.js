@@ -2,31 +2,21 @@ const TROY_OUNCE_TO_GRAMS = 31.1034768;
 const GOLD_NISAB_GRAMS = 87.48;
 const SILVER_NISAB_GRAMS = 612.36;
 const AGRICULTURE_NISAB_KG = 653;
-const STORAGE_KEY = "zakat-calculator-state-v1";
+const STORAGE_KEY = "zakat-calculator-india-v2";
+const CURRENCY = "INR";
 
 const FIELD_IDS = [
-  "cashOnHand",
-  "bankBalances",
-  "digitalWallets",
-  "savingsForGoals",
-  "goodLoans",
+  "liquidCash",
+  "receivables",
   "goldSavingsGrams",
   "goldJewelryGrams",
   "silverSavingsGrams",
   "silverJewelryGrams",
-  "stocksFunds",
-  "crypto",
-  "retirementAccessible",
-  "realEstateForSale",
-  "otherInvestments",
-  "businessCash",
-  "businessInventory",
-  "businessReceivables",
-  "rentalNetIncome",
-  "otherZakatableAssets",
+  "investments",
+  "businessAssets",
+  "otherAssets",
   "debtsDueNow",
   "billsDueNow",
-  "taxesAndWagesDue",
   "longTermInstallments",
   "advanceZakatPaid",
   "agricultureWeightKg",
@@ -39,131 +29,60 @@ const FIELD_IDS = [
   "manualSilverPerGram",
 ];
 
-const FALLBACK_CURRENCIES = [
-  ["AED", "UAE Dirham"],
-  ["AUD", "Australian Dollar"],
-  ["BDT", "Bangladeshi Taka"],
-  ["BHD", "Bahraini Dinar"],
-  ["CAD", "Canadian Dollar"],
-  ["CHF", "Swiss Franc"],
-  ["CNY", "Chinese Yuan"],
-  ["DKK", "Danish Krone"],
-  ["EGP", "Egyptian Pound"],
-  ["EUR", "Euro"],
-  ["GBP", "British Pound"],
-  ["HKD", "Hong Kong Dollar"],
-  ["IDR", "Indonesian Rupiah"],
-  ["INR", "Indian Rupee"],
-  ["JPY", "Japanese Yen"],
-  ["KES", "Kenyan Shilling"],
-  ["KWD", "Kuwaiti Dinar"],
-  ["LKR", "Sri Lankan Rupee"],
-  ["MAD", "Moroccan Dirham"],
-  ["MYR", "Malaysian Ringgit"],
-  ["NGN", "Nigerian Naira"],
-  ["NOK", "Norwegian Krone"],
-  ["NZD", "New Zealand Dollar"],
-  ["OMR", "Omani Rial"],
-  ["PKR", "Pakistani Rupee"],
-  ["QAR", "Qatari Riyal"],
-  ["SAR", "Saudi Riyal"],
-  ["SEK", "Swedish Krona"],
-  ["SGD", "Singapore Dollar"],
-  ["THB", "Thai Baht"],
-  ["TRY", "Turkish Lira"],
-  ["USD", "US Dollar"],
-  ["ZAR", "South African Rand"],
-];
+const formatter = new Intl.NumberFormat("en-IN", {
+  style: "currency",
+  currency: CURRENCY,
+  maximumFractionDigits: 2,
+});
 
-const LOCALE_CURRENCY_MAP = {
-  AE: "AED",
-  AU: "AUD",
-  BD: "BDT",
-  BH: "BHD",
-  CA: "CAD",
-  CH: "CHF",
-  CN: "CNY",
-  DE: "EUR",
-  DK: "DKK",
-  EG: "EGP",
-  ES: "EUR",
-  FR: "EUR",
-  GB: "GBP",
-  HK: "HKD",
-  ID: "IDR",
-  IE: "EUR",
-  IN: "INR",
-  IT: "EUR",
-  JP: "JPY",
-  KE: "KES",
-  KW: "KWD",
-  LK: "LKR",
-  MA: "MAD",
-  MY: "MYR",
-  NG: "NGN",
-  NO: "NOK",
-  NZ: "NZD",
-  OM: "OMR",
-  PK: "PKR",
-  QA: "QAR",
-  SA: "SAR",
-  SE: "SEK",
-  SG: "SGD",
-  TH: "THB",
-  TR: "TRY",
-  US: "USD",
-  ZA: "ZAR",
-};
-
-const formatterCache = new Map();
+const compactFormatter = new Intl.NumberFormat("en-IN", {
+  style: "currency",
+  currency: CURRENCY,
+  maximumFractionDigits: 0,
+});
 
 const elements = {
-  currencySelect: document.getElementById("currencySelect"),
   nisabBasisRadios: Array.from(document.querySelectorAll('input[name="nisabBasis"]')),
   jewelryPolicy: document.getElementById("jewelryPolicy"),
   debtMethod: document.getElementById("debtMethod"),
   hawlCompleted: document.getElementById("hawlCompleted"),
   agricultureIrrigation: document.getElementById("agricultureIrrigation"),
   refreshPricesButton: document.getElementById("refreshPricesButton"),
-  goldPerGramValue: document.getElementById("goldPerGramValue"),
-  goldPerOunceValue: document.getElementById("goldPerOunceValue"),
-  silverPerGramValue: document.getElementById("silverPerGramValue"),
-  silverPerOunceValue: document.getElementById("silverPerOunceValue"),
-  marketStatusLabel: document.getElementById("marketStatusLabel"),
-  marketTimestamp: document.getElementById("marketTimestamp"),
-  wealthStatusPill: document.getElementById("wealthStatusPill"),
   totalDueAmount: document.getElementById("totalDueAmount"),
+  wealthStatusPill: document.getElementById("wealthStatusPill"),
   wealthReasonText: document.getElementById("wealthReasonText"),
-  assetsTotalValue: document.getElementById("assetsTotalValue"),
-  liabilitiesTotalValue: document.getElementById("liabilitiesTotalValue"),
   netAssetsValue: document.getElementById("netAssetsValue"),
   nisabValue: document.getElementById("nisabValue"),
-  countedBreakdown: document.getElementById("countedBreakdown"),
-  deductedBreakdown: document.getElementById("deductedBreakdown"),
-  specialBreakdown: document.getElementById("specialBreakdown"),
-  countedHint: document.getElementById("countedHint"),
-  excludedList: document.getElementById("excludedList"),
+  wealthDueValue: document.getElementById("wealthDueValue"),
+  specialDueValue: document.getElementById("specialDueValue"),
+  goldPer10gValue: document.getElementById("goldPer10gValue"),
+  goldPerGramValue: document.getElementById("goldPerGramValue"),
+  silverPerKgValue: document.getElementById("silverPerKgValue"),
+  silverPerGramValue: document.getElementById("silverPerGramValue"),
+  marketStatusLabel: document.getElementById("marketStatusLabel"),
+  marketTimestamp: document.getElementById("marketTimestamp"),
+  breakdownRows: document.getElementById("breakdownRows"),
+  specialRows: document.getElementById("specialRows"),
+  livestockNote: document.getElementById("livestockNote"),
+  methodSummary: document.getElementById("methodSummary"),
 };
 
 const state = {
   settings: {
-    currency: "USD",
     nisabBasis: "silver",
     jewelryPolicy: "exclude-personal",
     debtMethod: "due-now",
     hawlCompleted: true,
     agricultureIrrigation: "rain",
   },
-  currencies: [],
   inputs: Object.fromEntries(FIELD_IDS.map((field) => [field, 0])),
   market: {
     loading: false,
     error: "",
-    goldUsdPerOunce: null,
-    silverUsdPerOunce: null,
-    fxRate: 1,
+    goldInrPerOunce: null,
+    silverInrPerOunce: null,
     fetchedAt: "",
-    sourceLabel: "Waiting for live prices",
+    sourceLabel: "Loading live India reference rates",
   },
 };
 
@@ -171,9 +90,7 @@ window.addEventListener("DOMContentLoaded", init);
 
 async function init() {
   hydrateRevealObserver();
-  state.currencies = await loadCurrencyOptions();
   restoreState();
-  populateCurrencySelect();
   bindEvents();
   syncControlsFromState();
   render();
@@ -191,20 +108,12 @@ function bindEvents() {
     });
   });
 
-  elements.currencySelect.addEventListener("change", async () => {
-    state.settings.currency = elements.currencySelect.value;
-    saveState();
-    render();
-    await refreshMarketData();
-  });
-
   elements.nisabBasisRadios.forEach((radio) => {
     radio.addEventListener("change", () => {
-      if (radio.checked) {
-        state.settings.nisabBasis = radio.value;
-        saveState();
-        render();
-      }
+      if (!radio.checked) return;
+      state.settings.nisabBasis = radio.value;
+      saveState();
+      render();
     });
   });
 
@@ -237,23 +146,7 @@ function bindEvents() {
   });
 }
 
-function populateCurrencySelect() {
-  elements.currencySelect.innerHTML = "";
-  state.currencies.forEach(({ code, label }) => {
-    const option = document.createElement("option");
-    option.value = code;
-    option.textContent = `${code} · ${label}`;
-    elements.currencySelect.appendChild(option);
-  });
-
-  const availableCodes = new Set(state.currencies.map((item) => item.code));
-  if (!availableCodes.has(state.settings.currency)) {
-    state.settings.currency = guessCurrency(availableCodes);
-  }
-}
-
 function syncControlsFromState() {
-  elements.currencySelect.value = state.settings.currency;
   elements.jewelryPolicy.value = state.settings.jewelryPolicy;
   elements.debtMethod.value = state.settings.debtMethod;
   elements.hawlCompleted.checked = state.settings.hawlCompleted;
@@ -266,44 +159,8 @@ function syncControlsFromState() {
   FIELD_IDS.forEach((fieldId) => {
     const input = document.getElementById(fieldId);
     if (!input) return;
-    const value = state.inputs[fieldId];
-    input.value = value > 0 ? String(value) : "";
+    input.value = state.inputs[fieldId] > 0 ? String(state.inputs[fieldId]) : "";
   });
-}
-
-async function loadCurrencyOptions() {
-  try {
-    const data = await fetchJson("https://api.frankfurter.dev/v2/currencies");
-    const parsed = parseCurrencyOptions(data);
-    if (parsed.length > 0) return parsed;
-  } catch (_error) {
-    // Fall back below.
-  }
-
-  return FALLBACK_CURRENCIES.map(([code, label]) => ({ code, label }));
-}
-
-function parseCurrencyOptions(data) {
-  if (Array.isArray(data)) {
-    return data
-      .map((entry) => ({
-        code: entry.code || entry.currency || entry.symbol,
-        label: entry.name || entry.currencyName || entry.description || entry.code,
-      }))
-      .filter((entry) => entry.code && entry.label)
-      .sort((a, b) => a.label.localeCompare(b.label));
-  }
-
-  if (data && typeof data === "object") {
-    return Object.entries(data)
-      .map(([code, value]) => ({
-        code,
-        label: typeof value === "string" ? value : value?.name || code,
-      }))
-      .sort((a, b) => a.label.localeCompare(b.label));
-  }
-
-  return [];
 }
 
 async function refreshMarketData(force = false) {
@@ -312,27 +169,21 @@ async function refreshMarketData(force = false) {
   state.market.loading = true;
   state.market.error = "";
   elements.refreshPricesButton.disabled = true;
-  renderMarket();
+  renderRates();
 
   try {
-    const [goldData, silverData, fxData] = await Promise.all([
-      fetchJson("https://api.gold-api.com/price/XAU"),
-      fetchJson("https://api.gold-api.com/price/XAG"),
-      fetchExchangeRate(state.settings.currency),
+    const [goldData, silverData] = await Promise.all([
+      fetchJson("https://api.gold-api.com/price/XAU/INR"),
+      fetchJson("https://api.gold-api.com/price/XAG/INR"),
     ]);
 
-    state.market.goldUsdPerOunce = parseMetalPrice(goldData);
-    state.market.silverUsdPerOunce = parseMetalPrice(silverData);
-    state.market.fxRate = parseExchangeRate(fxData, state.settings.currency);
+    state.market.goldInrPerOunce = parseMetalPrice(goldData);
+    state.market.silverInrPerOunce = parseMetalPrice(silverData);
     state.market.fetchedAt =
-      goldData.updatedAtReadable ||
-      goldData.updatedAt ||
-      silverData.updatedAtReadable ||
-      silverData.updatedAt ||
-      new Date().toISOString();
-    state.market.sourceLabel = "Live spot prices converted from USD";
+      goldData.updatedAt || silverData.updatedAt || new Date().toISOString();
+    state.market.sourceLabel = "Live INR reference rates";
   } catch (error) {
-    state.market.error = "Live prices unavailable. Use the manual per-gram override if needed.";
+    state.market.error = "Live India reference rates unavailable. Use manual INR override if needed.";
     state.market.sourceLabel = "Manual override ready";
     console.error(error);
   } finally {
@@ -340,11 +191,6 @@ async function refreshMarketData(force = false) {
     elements.refreshPricesButton.disabled = false;
     render();
   }
-}
-
-async function fetchExchangeRate(currency) {
-  if (currency === "USD") return { rates: { USD: 1 } };
-  return fetchJson(`https://api.frankfurter.dev/v2/rates?base=USD&quotes=${encodeURIComponent(currency)}`);
 }
 
 function parseMetalPrice(data) {
@@ -355,116 +201,57 @@ function parseMetalPrice(data) {
   return price;
 }
 
-function parseExchangeRate(data, currency) {
-  if (currency === "USD") return 1;
-
-  if (Array.isArray(data) && Number.isFinite(Number(data[0]?.rate))) {
-    return Number(data[0].rate);
-  }
-
-  if (data?.rates && Number.isFinite(Number(data.rates[currency]))) {
-    return Number(data.rates[currency]);
-  }
-
-  if (Array.isArray(data?.rates)) {
-    const match = data.rates.find((entry) => entry.quote === currency || entry.code === currency);
-    if (match && Number.isFinite(Number(match.rate))) {
-      return Number(match.rate);
-    }
-  }
-
-  throw new Error("Unable to parse exchange rate");
-}
-
-function render() {
-  const effectivePrices = getEffectivePrices();
-  const wealth = calculateWealth(effectivePrices);
-  const agriculture = calculateAgriculture();
-  const livestock = calculateLivestock();
-  const rikaz = calculateRikaz();
-  const totalCurrencyDue = wealth.payableNow + agriculture.payableNow + rikaz.payableNow;
-
-  renderMarket();
-  renderSummary(wealth, agriculture, livestock, rikaz, totalCurrencyDue);
-  renderExcludedGuidance();
-}
-
 function getEffectivePrices() {
-  const liveGold = state.market.goldUsdPerOunce
-    ? (state.market.goldUsdPerOunce * state.market.fxRate) / TROY_OUNCE_TO_GRAMS
+  const liveGoldPerGram = state.market.goldInrPerOunce
+    ? state.market.goldInrPerOunce / TROY_OUNCE_TO_GRAMS
     : null;
-  const liveSilver = state.market.silverUsdPerOunce
-    ? (state.market.silverUsdPerOunce * state.market.fxRate) / TROY_OUNCE_TO_GRAMS
+  const liveSilverPerGram = state.market.silverInrPerOunce
+    ? state.market.silverInrPerOunce / TROY_OUNCE_TO_GRAMS
     : null;
 
   const manualGold = state.inputs.manualGoldPerGram > 0 ? state.inputs.manualGoldPerGram : null;
   const manualSilver = state.inputs.manualSilverPerGram > 0 ? state.inputs.manualSilverPerGram : null;
 
   return {
-    goldPerGram: manualGold ?? liveGold,
-    silverPerGram: manualSilver ?? liveSilver,
-    goldPerOunce: (manualGold ?? liveGold) ? (manualGold ?? liveGold) * TROY_OUNCE_TO_GRAMS : null,
-    silverPerOunce: (manualSilver ?? liveSilver) ? (manualSilver ?? liveSilver) * TROY_OUNCE_TO_GRAMS : null,
+    goldPerGram: manualGold ?? liveGoldPerGram,
+    silverPerGram: manualSilver ?? liveSilverPerGram,
     usingManualGold: Boolean(manualGold),
     usingManualSilver: Boolean(manualSilver),
   };
 }
 
+function render() {
+  const prices = getEffectivePrices();
+  const wealth = calculateWealth(prices);
+  const agriculture = calculateAgriculture();
+  const rikaz = calculateRikaz();
+  const livestock = calculateLivestock();
+  const specialDue = agriculture.payableNow + rikaz.payableNow;
+  const totalDue = wealth.payableNow + specialDue;
+
+  renderRates();
+  renderSummary(wealth, agriculture, rikaz, livestock, totalDue, specialDue);
+}
+
 function calculateWealth(prices) {
-  const assets = [];
-  const deductions = [];
-  const reasons = [];
+  const moneyTotal = state.inputs.liquidCash + state.inputs.receivables;
+  const jewelryIncluded = state.settings.jewelryPolicy === "include-all";
+  const goldTotalGrams = state.inputs.goldSavingsGrams + (jewelryIncluded ? state.inputs.goldJewelryGrams : 0);
+  const silverTotalGrams = state.inputs.silverSavingsGrams + (jewelryIncluded ? state.inputs.silverJewelryGrams : 0);
+  const metalsTotal =
+    (prices.goldPerGram || 0) * goldTotalGrams + (prices.silverPerGram || 0) * silverTotalGrams;
+  const investmentsTotal = state.inputs.investments;
+  const businessTotal = state.inputs.businessAssets + state.inputs.otherAssets;
+  const totalAssets = moneyTotal + metalsTotal + investmentsTotal + businessTotal;
 
-  addMoneyLine(assets, "Cash on hand", state.inputs.cashOnHand, "Cash is fully zakatable once part of your hawl.");
-  addMoneyLine(assets, "Bank balances", state.inputs.bankBalances, "Banked money remains fully owned wealth.");
-  addMoneyLine(assets, "Digital wallets", state.inputs.digitalWallets, "Wallet balances are liquid money.");
-  addMoneyLine(assets, "Savings for future goals", state.inputs.savingsForGoals, "Money reserved for Hajj, study, marriage, or emergencies still counts.");
-  addMoneyLine(assets, "Good loans receivable", state.inputs.goodLoans, "Only likely recoverable debts are counted.");
+  const immediateLiabilities = state.inputs.debtsDueNow + state.inputs.billsDueNow;
+  const installmentLiabilities =
+    state.settings.debtMethod === "next-12-months" ? state.inputs.longTermInstallments : 0;
+  const totalLiabilities = immediateLiabilities + installmentLiabilities;
+  const netAssets = totalAssets - totalLiabilities;
 
-  const goldSavingsValue = (prices.goldPerGram || 0) * state.inputs.goldSavingsGrams;
-  const goldJewelryValue = (prices.goldPerGram || 0) * state.inputs.goldJewelryGrams;
-  const silverSavingsValue = (prices.silverPerGram || 0) * state.inputs.silverSavingsGrams;
-  const silverJewelryValue = (prices.silverPerGram || 0) * state.inputs.silverJewelryGrams;
-
-  addMoneyLine(assets, "Gold held as savings", goldSavingsValue, "Gold savings are classic zakatable wealth.");
-  addMoneyLine(assets, "Silver held as savings", silverSavingsValue, "Silver savings are classic zakatable wealth.");
-
-  if (state.settings.jewelryPolicy === "include-all") {
-    addMoneyLine(assets, "Gold jewelry", goldJewelryValue, "Included because you selected the all-jewelry method.");
-    addMoneyLine(assets, "Silver jewelry", silverJewelryValue, "Included because you selected the all-jewelry method.");
-  }
-
-  addMoneyLine(assets, "Stocks, ETFs, and funds", state.inputs.stocksFunds, "Tradable investments are treated here at current value.");
-  addMoneyLine(assets, "Crypto assets", state.inputs.crypto, "Crypto is treated here as a liquid investment holding.");
-  addMoneyLine(assets, "Accessible retirement funds", state.inputs.retirementAccessible, "Use only the amount you could actually withdraw.");
-  addMoneyLine(assets, "Property held for resale", state.inputs.realEstateForSale, "Trade property is handled like inventory.");
-  addMoneyLine(assets, "Other liquid investments", state.inputs.otherInvestments, "Extra saleable wealth belongs in zakatable assets.");
-
-  addMoneyLine(assets, "Business cash", state.inputs.businessCash, "Business cash is part of zakatable working capital.");
-  addMoneyLine(assets, "Business inventory", state.inputs.businessInventory, "Trade goods are valued at current sale value.");
-  addMoneyLine(assets, "Business receivables", state.inputs.businessReceivables, "Expected receivables to the business are counted.");
-  addMoneyLine(assets, "Net rental income on hand", state.inputs.rentalNetIncome, "Income on hand is counted, not the rented asset itself.");
-  addMoneyLine(assets, "Other zakatable assets", state.inputs.otherZakatableAssets, "Use this for any extra liquid or tradeable wealth.");
-
-  addMoneyLine(deductions, "Debts due now", state.inputs.debtsDueNow, "Immediate personal debts can be deducted.");
-  addMoneyLine(deductions, "Bills due now", state.inputs.billsDueNow, "Only liabilities already due are deducted.");
-  addMoneyLine(deductions, "Taxes or wages due", state.inputs.taxesAndWagesDue, "Existing payables are deductible.");
-
-  if (state.settings.debtMethod === "next-12-months") {
-    addMoneyLine(
-      deductions,
-      "Installments due within 12 months",
-      state.inputs.longTermInstallments,
-      "Included because you selected the 12-month debt method."
-    );
-  }
-
-  const totalAssets = sumAmounts(assets);
-  const totalDeductions = sumAmounts(deductions);
-  const netAssets = totalAssets - totalDeductions;
-
-  const goldNisab = prices.goldPerGram ? GOLD_NISAB_GRAMS * prices.goldPerGram : null;
-  const silverNisab = prices.silverPerGram ? SILVER_NISAB_GRAMS * prices.silverPerGram : null;
+  const goldNisab = prices.goldPerGram ? prices.goldPerGram * GOLD_NISAB_GRAMS : null;
+  const silverNisab = prices.silverPerGram ? prices.silverPerGram * SILVER_NISAB_GRAMS : null;
   const selectedNisab = state.settings.nisabBasis === "gold" ? goldNisab : silverNisab;
   const aboveNisab = Number.isFinite(selectedNisab) ? netAssets >= selectedNisab : false;
 
@@ -474,103 +261,134 @@ function calculateWealth(prices) {
       ? Math.max(baseZakat - state.inputs.advanceZakatPaid, 0)
       : 0;
 
+  const estimateIfDueToday = Math.max(baseZakat - state.inputs.advanceZakatPaid, 0);
+
+  const breakdown = [
+    {
+      label: "Money and receivables",
+      value: moneyTotal,
+      reason: "Cash, bank balances, wallets, and reliable receivables.",
+    },
+    {
+      label: "Gold and silver",
+      value: metalsTotal,
+      reason: jewelryIncluded
+        ? "Savings metals plus jewelry under the current method."
+        : "Savings metals only. Personal jewelry is excluded.",
+    },
+    {
+      label: "Investments",
+      value: investmentsTotal,
+      reason: "Tradable shares, funds, crypto, and similar holdings.",
+    },
+    {
+      label: "Business and other assets",
+      value: businessTotal,
+      reason: "Business stock, business cash, and other zakatable holdings.",
+    },
+    {
+      label: "Liabilities deducted",
+      value: totalLiabilities,
+      reason:
+        state.settings.debtMethod === "next-12-months"
+          ? "Immediate dues plus the next 12 months of installments."
+          : "Only debts and bills already due now.",
+      negative: true,
+    },
+  ];
+
+  const notes = [];
   if (!Number.isFinite(selectedNisab)) {
-    reasons.push("Live or manual metal prices are needed to determine the nisab.");
+    notes.push("Need live or manual metal rates to test nisab.");
   } else if (netAssets <= 0) {
-    reasons.push("Your deductible liabilities are equal to or greater than your zakatable assets.");
+    notes.push("Liabilities are equal to or greater than your zakatable wealth.");
   } else if (!aboveNisab) {
-    reasons.push("Your net zakatable assets are below the selected nisab threshold.");
+    notes.push("Net zakatable wealth is below the selected nisab.");
   } else if (!state.settings.hawlCompleted) {
-    reasons.push("Your wealth is above nisab, but you marked that one lunar year has not yet passed.");
+    notes.push("Net wealth is above nisab, but your hawl is not complete yet.");
   } else {
-    reasons.push("Your net zakatable assets are above nisab and you marked your hawl as complete.");
+    notes.push("Net wealth is above nisab and your hawl is complete.");
   }
 
   if (state.inputs.advanceZakatPaid > 0) {
-    reasons.push("Advance zakat already paid has been deducted from the annual wealth-zakat amount only.");
-  }
-
-  if (state.settings.jewelryPolicy === "exclude-personal") {
-    reasons.push("Personal gold and silver jewelry is currently excluded unless you change the jewelry setting.");
-  } else {
-    reasons.push("Personal gold and silver jewelry is currently included because of your selected jewelry method.");
+    notes.push("Advance zakat has been deducted from the annual wealth amount.");
   }
 
   return {
-    assets,
-    deductions,
+    moneyTotal,
+    metalsTotal,
+    investmentsTotal,
+    businessTotal,
     totalAssets,
-    totalDeductions,
+    totalLiabilities,
     netAssets,
-    goldNisab,
-    silverNisab,
     selectedNisab,
     baseZakat,
     payableNow,
-    estimatedIfDueToday: Math.max(baseZakat - state.inputs.advanceZakatPaid, 0),
-    reasons,
+    estimateIfDueToday,
+    breakdown,
+    notes,
     aboveNisab,
   };
 }
 
 function calculateAgriculture() {
-  const weight = state.inputs.agricultureWeightKg;
-  const value = state.inputs.agricultureAssessableValue;
   const rate =
     state.settings.agricultureIrrigation === "rain"
       ? 0.1
       : state.settings.agricultureIrrigation === "mixed"
         ? 0.075
         : 0.05;
-  const aboveNisab = weight >= AGRICULTURE_NISAB_KG;
-  const payableNow = aboveNisab && value > 0 ? value * rate : 0;
+  const aboveNisab = state.inputs.agricultureWeightKg >= AGRICULTURE_NISAB_KG;
+  const payableNow =
+    aboveNisab && state.inputs.agricultureAssessableValue > 0
+      ? state.inputs.agricultureAssessableValue * rate
+      : 0;
 
   return {
     payableNow,
-    rate,
-    aboveNisab,
     reason:
-      aboveNisab && value > 0
-        ? `Produce reached the five-wasq threshold, so the selected harvest rate of ${(rate * 100).toFixed(1)}% applies.`
-        : "No agricultural zakat is due here unless harvest weight reaches the five-wasq threshold and you enter an assessable value.",
+      payableNow > 0
+        ? `Harvest reached nisab, so ${String(rate * 100)}% applies to the entered harvest value.`
+        : "No agriculture due from the values entered.",
   };
 }
 
 function calculateRikaz() {
-  const value = state.inputs.rikazValue;
+  const payableNow = state.inputs.rikazValue > 0 ? state.inputs.rikazValue * 0.2 : 0;
   return {
-    payableNow: value > 0 ? value * 0.2 : 0,
+    payableNow,
     reason:
-      value > 0
-        ? "Rikaz is charged here at one-fifth immediately and is not tied to the annual hawl."
+      payableNow > 0
+        ? "Rikaz is calculated here at one-fifth immediately."
         : "No rikaz value entered.",
   };
 }
 
 function calculateLivestock() {
-  const hawlReady = state.settings.hawlCompleted;
+  if (!state.settings.hawlCompleted) {
+    return [
+      { label: "Camels", value: "Wait for hawl", reason: "Check after one lunar year." },
+      { label: "Cattle or buffalo", value: "Wait for hawl", reason: "Check after one lunar year." },
+      { label: "Sheep or goats", value: "Wait for hawl", reason: "Check after one lunar year." },
+    ];
+  }
 
   return [
     {
       label: "Camels",
-      result: hawlReady ? resolveCamelDue(state.inputs.camelsCount) : null,
-      fallback: hawlReady
-        ? "No camel zakat due yet."
-        : "Check again when a lunar year is complete for the herd.",
+      value: resolveCamelDue(state.inputs.camelsCount) || "None",
+      reason: "Livestock zakat is usually paid in kind.",
     },
     {
-      label: "Cattle / buffalo",
-      result: hawlReady ? resolveCattleDue(state.inputs.cattleCount) : null,
-      fallback: hawlReady
-        ? "No cattle zakat due yet."
-        : "Check again when a lunar year is complete for the herd.",
+      label: "Cattle or buffalo",
+      value: resolveCattleDue(state.inputs.cattleCount) || "None",
+      reason: "Livestock zakat is usually paid in kind.",
     },
     {
-      label: "Sheep / goats",
-      result: hawlReady ? resolveSheepDue(state.inputs.sheepCount) : null,
-      fallback: hawlReady
-        ? "No sheep or goat zakat due yet."
-        : "Check again when a lunar year is complete for the flock.",
+      label: "Sheep or goats",
+      value: resolveSheepDue(state.inputs.sheepCount) || "None",
+      reason: "Livestock zakat is usually paid in kind.",
     },
   ];
 }
@@ -605,7 +423,7 @@ function resolveCamelDue(count) {
     }
   }
 
-  if (!best) return "Review camel thresholds with a scholar";
+  if (!best) return "Review with a scholar";
   return formatAnimalParts([
     [best.hiqqah, "hiqqah"],
     [best.bintLabun, "bint labun"],
@@ -635,7 +453,7 @@ function resolveCattleDue(count) {
     }
   }
 
-  if (!best) return "Review cattle thresholds with a scholar";
+  if (!best) return "Review with a scholar";
   return formatAnimalParts([
     [best.tabi, "tabi / tabi'ah"],
     [best.musinnah, "musinnah"],
@@ -651,224 +469,199 @@ function resolveSheepDue(count) {
   return `${Math.floor(count / 100)} sheep`;
 }
 
-function renderSummary(wealth, agriculture, livestock, rikaz, totalCurrencyDue) {
-  const formatter = getCurrencyFormatter(state.settings.currency);
-  const overallStatus = determineStatus(wealth, agriculture, rikaz, totalCurrencyDue);
+function renderSummary(wealth, agriculture, rikaz, livestock, totalDue, specialDue) {
+  updateText(elements.totalDueAmount, formatter.format(totalDue));
+  updateText(elements.netAssetsValue, formatter.format(wealth.netAssets));
+  updateText(
+    elements.nisabValue,
+    Number.isFinite(wealth.selectedNisab) ? compactFormatter.format(wealth.selectedNisab) : "Need rates"
+  );
+  updateText(
+    elements.wealthDueValue,
+    wealth.payableNow > 0
+      ? formatter.format(wealth.payableNow)
+      : wealth.estimateIfDueToday > 0 && !state.settings.hawlCompleted
+        ? `${formatter.format(wealth.estimateIfDueToday)} est.`
+        : formatter.format(0)
+  );
+  updateText(elements.specialDueValue, formatter.format(specialDue));
 
-  elements.totalDueAmount.textContent = formatter.format(totalCurrencyDue);
-  elements.assetsTotalValue.textContent = formatter.format(wealth.totalAssets);
-  elements.liabilitiesTotalValue.textContent = formatter.format(wealth.totalDeductions);
-  elements.netAssetsValue.textContent = formatter.format(wealth.netAssets);
-  elements.nisabValue.textContent = Number.isFinite(wealth.selectedNisab)
-    ? formatter.format(wealth.selectedNisab)
-    : "Need prices";
-
-  elements.wealthStatusPill.textContent = overallStatus.label;
-  elements.wealthStatusPill.className = `status-pill ${overallStatus.className}`;
-  elements.wealthReasonText.textContent = overallStatus.reason;
-
-  renderDetailRows(elements.countedBreakdown, wealth.assets, "No positive zakatable assets entered yet.", formatter);
-  renderDetailRows(
-    elements.deductedBreakdown,
-    wealth.deductions,
-    "No deductible liabilities are being applied right now.",
-    formatter
+  const status = determineStatus(wealth, totalDue);
+  updateText(elements.wealthStatusPill, status.label);
+  elements.wealthStatusPill.className = `status-pill ${status.className}`;
+  animateNode(elements.wealthStatusPill);
+  updateText(elements.wealthReasonText, status.reason);
+  updateText(
+    elements.methodSummary,
+    [
+      `${capitalize(state.settings.nisabBasis)} nisab`,
+      state.settings.jewelryPolicy === "include-all" ? "all jewelry included" : "personal jewelry excluded",
+      state.settings.debtMethod === "next-12-months" ? "12-month debt rule" : "due-now debt rule",
+    ].join(", ")
   );
 
-  const specialRows = [
-    {
-      label: "Annual wealth zakat",
-      value: wealth.payableNow > 0 ? formatter.format(wealth.payableNow) : formatter.format(wealth.estimatedIfDueToday),
-      reason:
-        wealth.payableNow > 0
-          ? "2.5% applied to net zakatable wealth after the selected nisab and hawl checks."
-          : wealth.reasons[0],
-    },
-    {
-      label: "Agriculture",
-      value: agriculture.payableNow > 0 ? formatter.format(agriculture.payableNow) : formatter.format(0),
-      reason: agriculture.reason,
-    },
-    {
-      label: "Rikaz",
-      value: rikaz.payableNow > 0 ? formatter.format(rikaz.payableNow) : formatter.format(0),
-      reason: rikaz.reason,
-    },
-    ...livestock.map((entry) => ({
-      label: entry.label,
-      value: entry.result || "None",
-      reason: entry.result
-        ? "Livestock zakat is usually given in kind according to herd thresholds."
-        : entry.fallback,
-    })),
-  ];
-
-  renderSimpleRows(elements.specialBreakdown, specialRows, "No special-category zakat is due from the values entered.");
-
-  elements.countedHint.textContent =
-    state.settings.jewelryPolicy === "include-all"
-      ? "Jewelry is included under your current method."
-      : "Personal jewelry is currently excluded unless you change the method.";
+  renderBreakdown(wealth.breakdown);
+  renderSpecialRows(agriculture, rikaz, livestock);
 }
 
-function determineStatus(wealth, agriculture, rikaz, totalCurrencyDue) {
-  if (totalCurrencyDue > 0) {
+function determineStatus(wealth, totalDue) {
+  if (totalDue > 0) {
     return {
       label: "Due now",
       className: "is-due",
-      reason: totalCurrencyDue === wealth.payableNow
-        ? wealth.reasons.join(" ")
-        : `Some immediate zakat is due now. ${wealth.reasons.join(" ")}`,
+      reason: wealth.notes.join(" "),
     };
   }
 
   if (state.market.error && !state.inputs.manualGoldPerGram && !state.inputs.manualSilverPerGram) {
     return {
-      label: "Need prices",
+      label: "Need rates",
       className: "is-attention",
       reason: state.market.error,
     };
   }
 
-  if (wealth.estimatedIfDueToday > 0 && !state.settings.hawlCompleted) {
+  if (wealth.estimateIfDueToday > 0 && !state.settings.hawlCompleted) {
     return {
       label: "Estimate",
       className: "is-estimate",
-      reason: `Estimated annual wealth zakat if your hawl ended today: ${getCurrencyFormatter(state.settings.currency).format(wealth.estimatedIfDueToday)}.`,
+      reason: `If your hawl ended today, estimated wealth zakat would be ${formatter.format(wealth.estimateIfDueToday)}.`,
     };
   }
 
   return {
     label: "Below nisab",
     className: "is-clear",
-    reason: wealth.reasons.join(" "),
+    reason: wealth.notes.join(" "),
   };
 }
 
-function renderMarket() {
+function renderRates() {
   const prices = getEffectivePrices();
-  const formatter = getCurrencyFormatter(state.settings.currency);
+  const goldPer10g = prices.goldPerGram ? prices.goldPerGram * 10 : null;
+  const silverPerKg = prices.silverPerGram ? prices.silverPerGram * 1000 : null;
 
-  elements.goldPerGramValue.textContent = prices.goldPerGram ? formatter.format(prices.goldPerGram) : "Need price";
-  elements.goldPerOunceValue.textContent = prices.goldPerOunce ? `${formatter.format(prices.goldPerOunce)} / oz` : "--";
-  elements.silverPerGramValue.textContent = prices.silverPerGram ? formatter.format(prices.silverPerGram) : "Need price";
-  elements.silverPerOunceValue.textContent = prices.silverPerOunce ? `${formatter.format(prices.silverPerOunce)} / oz` : "--";
+  updateText(elements.goldPer10gValue, goldPer10g ? formatter.format(goldPer10g) : "Need rate");
+  updateText(
+    elements.goldPerGramValue,
+    prices.goldPerGram ? `${formatter.format(prices.goldPerGram)} per gram` : "--"
+  );
+  updateText(elements.silverPerKgValue, silverPerKg ? formatter.format(silverPerKg) : "Need rate");
+  updateText(
+    elements.silverPerGramValue,
+    prices.silverPerGram ? `${formatter.format(prices.silverPerGram)} per gram` : "--"
+  );
 
   if (state.market.loading) {
-    elements.marketStatusLabel.textContent = "Refreshing live prices...";
+    updateText(elements.marketStatusLabel, "Refreshing live India reference rates...");
   } else if (state.market.error) {
-    elements.marketStatusLabel.textContent = state.market.error;
+    updateText(elements.marketStatusLabel, state.market.error);
+  } else if (prices.usingManualGold || prices.usingManualSilver) {
+    updateText(elements.marketStatusLabel, "Manual INR override is active.");
   } else {
-    elements.marketStatusLabel.textContent =
-      prices.usingManualGold || prices.usingManualSilver
-        ? "Manual metal override is active."
-        : state.market.sourceLabel;
+    updateText(elements.marketStatusLabel, state.market.sourceLabel);
   }
 
-  elements.marketTimestamp.textContent = state.market.fetchedAt
-    ? `Last price update: ${formatTimestamp(state.market.fetchedAt)}.`
-    : "Spot prices are converted from USD into your selected currency.";
+  updateText(
+    elements.marketTimestamp,
+    state.market.fetchedAt
+      ? `Updated ${formatTimestamp(state.market.fetchedAt)}. These are reference rates, not local retail city quotes.`
+      : "Indian reference rates will appear here."
+  );
 }
 
-function renderExcludedGuidance() {
-  const items = [
-    "Your primary home and normal household furniture.",
-    "Your personal car, clothing, phones, and daily-use items.",
-    "Business equipment and fixed assets not held for sale.",
-    "Doubtful receivables you do not reasonably expect back.",
-  ];
+function renderBreakdown(rows) {
+  const visibleRows = rows.filter((row) => Math.abs(row.value) > 0);
+  const signature = JSON.stringify(
+    visibleRows.map((row) => [row.label, row.value, row.reason, row.negative ? 1 : 0])
+  );
 
-  if (state.settings.jewelryPolicy === "exclude-personal") {
-    items.push("Personal gold and silver jewelry under the current jewelry setting.");
-  }
-
-  elements.excludedList.innerHTML = "";
-  items.forEach((text) => {
-    const item = document.createElement("li");
-    item.textContent = text;
-    elements.excludedList.appendChild(item);
-  });
-}
-
-function renderDetailRows(container, rows, emptyMessage, formatter) {
-  if (!rows.length) {
-    container.innerHTML = `<div class="empty-state">${emptyMessage}</div>`;
+  if (elements.breakdownRows.dataset.signature === signature) {
     return;
   }
 
-  container.innerHTML = "";
-  rows.forEach((row) => {
-    const wrapper = document.createElement("article");
-    wrapper.className = "detail-row";
-    wrapper.innerHTML = `
-      <div class="detail-row-top">
+  elements.breakdownRows.dataset.signature = signature;
+
+  if (!visibleRows.length) {
+    elements.breakdownRows.innerHTML = '<div class="empty-note">Start entering values to see the breakdown.</div>';
+    animateChildren(elements.breakdownRows);
+    return;
+  }
+
+  elements.breakdownRows.innerHTML = "";
+  visibleRows.forEach((row) => {
+    const article = document.createElement("article");
+    article.className = "list-row";
+    article.innerHTML = `
+      <div class="list-row-top">
         <strong>${row.label}</strong>
-        <span class="value">${formatter.format(row.amount)}</span>
+        <span class="value">${row.negative ? "-" : ""}${formatter.format(Math.abs(row.value))}</span>
       </div>
       <p>${row.reason}</p>
     `;
-    container.appendChild(wrapper);
+    elements.breakdownRows.appendChild(article);
   });
+
+  animateChildren(elements.breakdownRows);
 }
 
-function renderSimpleRows(container, rows, emptyMessage) {
-  const visibleRows = rows.filter((row) => row.value !== null && row.value !== undefined);
-  if (!visibleRows.length) {
-    container.innerHTML = `<div class="empty-state">${emptyMessage}</div>`;
+function renderSpecialRows(agriculture, rikaz, livestock) {
+  const rows = [
+    {
+      label: "Agriculture",
+      value: formatter.format(agriculture.payableNow),
+      reason: agriculture.reason,
+    },
+    {
+      label: "Rikaz",
+      value: formatter.format(rikaz.payableNow),
+      reason: rikaz.reason,
+    },
+    ...livestock.map((item) => ({
+      label: item.label,
+      value: item.value,
+      reason: item.reason,
+    })),
+  ];
+
+  const signature = JSON.stringify(rows.map((row) => [row.label, row.value, row.reason]));
+  if (elements.specialRows.dataset.signature === signature) {
+    updateText(
+      elements.livestockNote,
+      state.settings.hawlCompleted
+        ? "Livestock dues are shown as animals due in kind."
+        : "Livestock dues are paused because hawl is not complete."
+    );
     return;
   }
 
-  container.innerHTML = "";
-  visibleRows.forEach((row) => {
-    const wrapper = document.createElement("article");
-    wrapper.className = "detail-row";
-    wrapper.innerHTML = `
-      <div class="detail-row-top">
+  elements.specialRows.dataset.signature = signature;
+  elements.specialRows.innerHTML = "";
+  rows.forEach((row) => {
+    const article = document.createElement("article");
+    article.className = "list-row";
+    article.innerHTML = `
+      <div class="list-row-top">
         <strong>${row.label}</strong>
         <span class="value">${row.value}</span>
       </div>
       <p>${row.reason}</p>
     `;
-    container.appendChild(wrapper);
+    elements.specialRows.appendChild(article);
   });
-}
 
-function addMoneyLine(target, label, amount, reason) {
-  if (!Number.isFinite(amount) || amount <= 0) return;
-  target.push({ label, amount, reason });
-}
-
-function sumAmounts(items) {
-  return items.reduce((total, item) => total + item.amount, 0);
+  animateChildren(elements.specialRows);
+  updateText(
+    elements.livestockNote,
+    state.settings.hawlCompleted
+      ? "Livestock dues are shown as animals due in kind."
+      : "Livestock dues are paused because hawl is not complete."
+  );
 }
 
 function parsePositiveNumber(value) {
   const parsed = Number.parseFloat(value);
   return Number.isFinite(parsed) && parsed > 0 ? parsed : 0;
-}
-
-function getCurrencyFormatter(currency) {
-  if (!formatterCache.has(currency)) {
-    formatterCache.set(
-      currency,
-      new Intl.NumberFormat(undefined, {
-        style: "currency",
-        currency,
-        maximumFractionDigits: 2,
-      })
-    );
-  }
-
-  return formatterCache.get(currency);
-}
-
-function formatTimestamp(value) {
-  const parsed = new Date(value);
-  if (Number.isNaN(parsed.getTime())) return value;
-  return new Intl.DateTimeFormat(undefined, {
-    dateStyle: "medium",
-    timeStyle: "short",
-  }).format(parsed);
 }
 
 async function fetchJson(url) {
@@ -879,29 +672,25 @@ async function fetchJson(url) {
   return response.json();
 }
 
+function formatTimestamp(value) {
+  const parsed = new Date(value);
+  if (Number.isNaN(parsed.getTime())) return value;
+  return new Intl.DateTimeFormat("en-IN", {
+    dateStyle: "medium",
+    timeStyle: "short",
+    timeZone: "Asia/Kolkata",
+  }).format(parsed);
+}
+
 function restoreState() {
   try {
     const raw = localStorage.getItem(STORAGE_KEY);
-    if (!raw) {
-      state.settings.currency = guessCurrency(new Set(state.currencies.map((item) => item.code)));
-      return;
-    }
-
+    if (!raw) return;
     const saved = JSON.parse(raw);
-    state.settings = {
-      ...state.settings,
-      ...saved.settings,
-      currency:
-        saved.settings?.currency && state.currencies.some((item) => item.code === saved.settings.currency)
-          ? saved.settings.currency
-          : guessCurrency(new Set(state.currencies.map((item) => item.code))),
-    };
-    state.inputs = {
-      ...state.inputs,
-      ...saved.inputs,
-    };
+    state.settings = { ...state.settings, ...saved.settings };
+    state.inputs = { ...state.inputs, ...saved.inputs };
   } catch (_error) {
-    state.settings.currency = guessCurrency(new Set(state.currencies.map((item) => item.code)));
+    // Ignore corrupted local state.
   }
 }
 
@@ -915,22 +704,15 @@ function saveState() {
   );
 }
 
-function guessCurrency(availableCodes) {
-  try {
-    const locale = new Intl.Locale(navigator.language || "en-US");
-    const region = locale.maximize().region;
-    const guessed = LOCALE_CURRENCY_MAP[region] || "USD";
-    return availableCodes.has(guessed) ? guessed : "USD";
-  } catch (_error) {
-    return availableCodes.has("USD") ? "USD" : [...availableCodes][0];
-  }
-}
-
 function formatAnimalParts(parts) {
   return parts
     .filter(([count]) => count > 0)
     .map(([count, label]) => `${count} ${label}`)
     .join(" + ");
+}
+
+function capitalize(value) {
+  return value.charAt(0).toUpperCase() + value.slice(1);
 }
 
 function hydrateRevealObserver() {
@@ -945,5 +727,54 @@ function hydrateRevealObserver() {
     { threshold: 0.12 }
   );
 
-  document.querySelectorAll(".reveal").forEach((element) => observer.observe(element));
+  const nodes = Array.from(
+    document.querySelectorAll(
+      ".reveal, .surface, .hero-copy, .field-group, .optional-block, .site-footer, .result-stats article"
+    )
+  );
+
+  nodes.forEach((node, index) => {
+    node.classList.add("motion-item");
+    node.style.setProperty("--motion-delay", `${Math.min(index * 40, 240)}ms`);
+    observer.observe(node);
+  });
+}
+
+function updateText(element, nextValue) {
+  if (!element) return;
+  if (element.textContent === nextValue) return;
+  element.textContent = nextValue;
+  animateNode(element);
+}
+
+function animateChildren(container) {
+  if (window.matchMedia("(prefers-reduced-motion: reduce)").matches) return;
+  Array.from(container.children).forEach((child, index) => {
+    child.animate(
+      [
+        { opacity: 0, transform: "translateY(10px)" },
+        { opacity: 1, transform: "translateY(0)" },
+      ],
+      {
+        duration: 280,
+        delay: index * 35,
+        easing: "cubic-bezier(0.22, 1, 0.36, 1)",
+        fill: "both",
+      }
+    );
+  });
+}
+
+function animateNode(element) {
+  if (window.matchMedia("(prefers-reduced-motion: reduce)").matches) return;
+  element.animate(
+    [
+      { opacity: 0.55, transform: "translateY(8px)" },
+      { opacity: 1, transform: "translateY(0)" },
+    ],
+    {
+      duration: 220,
+      easing: "cubic-bezier(0.22, 1, 0.36, 1)",
+    }
+  );
 }

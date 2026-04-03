@@ -3,573 +3,365 @@
   <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>Zakat Calculator</title>
+    <title>Zakat Calculator India</title>
     <meta
       name="description"
-      content="Worldwide zakat calculator with live gold and silver prices, multiple currencies, and clear breakdowns rooted in Qur'an, Hadith, and contemporary zakat guidance."
+      content="A cleaner India-first zakat calculator in INR with live gold and silver reference rates, concise guidance, and a simple breakdown of what is due."
     />
     <link rel="preconnect" href="https://fonts.googleapis.com" />
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
     <link
-      href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:wght@500;600;700&family=Sora:wght@400;500;600;700&display=swap"
+      href="https://fonts.googleapis.com/css2?family=Instrument+Sans:wght@400;500;600;700&family=Newsreader:opsz,wght@6..72,500;6..72,600;6..72,700&display=swap"
       rel="stylesheet"
     />
     <link rel="stylesheet" href="styles.css" />
   </head>
   <body>
-    <div class="background-orbit background-orbit-a"></div>
-    <div class="background-orbit background-orbit-b"></div>
+    <div class="ambient ambient-a"></div>
+    <div class="ambient ambient-b"></div>
 
-    <div class="page-shell">
+    <div class="site-shell">
       <header class="hero reveal">
         <div class="hero-copy">
-          <p class="eyebrow">Worldwide zakat calculator</p>
-          <h1>Zakat Calculator</h1>
-          <p class="hero-summary">
-            Live gold and silver spot prices in your selected currency, a clear
-            net-wealth calculator, and separate treatment for crops, livestock,
-            and rikaz.
+          <p class="eyebrow">India-first zakat calculator</p>
+          <h1>Simple. Clear. In rupees.</h1>
+          <p class="hero-text">
+            Use current INR gold and silver reference rates, enter only the
+            wealth you own today, and see what is due now without the clutter.
           </p>
-          <ul class="hero-points">
-            <li>Current-day metal pricing converted into your chosen currency.</li>
-            <li>Gold or silver nisab, jewelry treatment, and debt-method options.</li>
-            <li>Transparent reasoning that shows what counted, what was deducted, and why.</li>
-          </ul>
-        </div>
 
-        <div class="hero-controls surface">
-          <div class="panel-label">Method</div>
-          <div class="control-grid">
-            <label class="control-field">
-              <span>Currency</span>
-              <select id="currencySelect" aria-label="Currency"></select>
-            </label>
-
-            <fieldset class="control-field span-2">
-              <legend>Nisab basis</legend>
-              <div class="segmented">
-                <label>
-                  <input type="radio" name="nisabBasis" value="silver" checked />
-                  <span>Silver</span>
-                </label>
-                <label>
-                  <input type="radio" name="nisabBasis" value="gold" />
-                  <span>Gold</span>
-                </label>
-              </div>
-            </fieldset>
-
-            <label class="control-field">
-              <span>Jewelry treatment</span>
-              <select id="jewelryPolicy" aria-label="Jewelry treatment">
-                <option value="exclude-personal">Exclude personal jewelry</option>
-                <option value="include-all">Include all gold/silver jewelry</option>
-              </select>
-            </label>
-
-            <label class="control-field">
-              <span>Debt deduction</span>
-              <select id="debtMethod" aria-label="Debt deduction">
-                <option value="due-now">Only dues payable now</option>
-                <option value="next-12-months">Include next 12 months</option>
-              </select>
-            </label>
-
-            <label class="toggle-field span-2" for="hawlCompleted">
-              <input id="hawlCompleted" type="checkbox" checked />
-              <div>
-                <strong>My hawl is complete.</strong>
-                <span>
-                  Uncheck this if one lunar year has not yet passed since you first
-                  remained above nisab.
-                </span>
-              </div>
-            </label>
+          <div class="hero-badges">
+            <span>INR only</span>
+            <span>Silver or gold nisab</span>
+            <span>Indian metal rate reference</span>
           </div>
         </div>
 
-        <aside class="market-panel surface">
-          <div class="panel-label">Market snapshot</div>
-          <div class="market-grid">
-            <article class="quote-tile">
-              <p>Gold</p>
-              <strong id="goldPerGramValue">--</strong>
-              <span id="goldPerOunceValue">--</span>
-            </article>
-            <article class="quote-tile">
-              <p>Silver</p>
-              <strong id="silverPerGramValue">--</strong>
-              <span id="silverPerOunceValue">--</span>
-            </article>
+        <aside class="result-panel surface reveal">
+          <div class="result-head">
+            <p class="eyebrow">Current result</p>
+            <div id="wealthStatusPill" class="status-pill">Checking</div>
           </div>
-          <div class="market-meta">
-            <span id="marketStatusLabel">Loading live prices...</span>
-            <button id="refreshPricesButton" class="ghost-button" type="button">
-              Refresh prices
-            </button>
-          </div>
-          <p class="market-footnote" id="marketTimestamp">
-            Spot prices are converted from USD into your selected currency.
+
+          <strong id="totalDueAmount" class="due-amount">--</strong>
+          <p id="wealthReasonText" class="result-copy">
+            Enter your numbers to see whether zakat is due now.
           </p>
 
-          <details class="manual-override">
-            <summary>Manual metal price override</summary>
-            <p>
-              Use these only if live prices are unavailable or you want local dealer
-              rates instead of spot.
-            </p>
-            <div class="mini-input-grid">
-              <label class="control-field">
-                <span>Gold per gram</span>
-                <input
-                  id="manualGoldPerGram"
-                  data-number-field="manualGoldPerGram"
-                  type="number"
-                  min="0"
-                  step="0.01"
-                  inputmode="decimal"
-                  placeholder="0.00"
-                />
-              </label>
-              <label class="control-field">
-                <span>Silver per gram</span>
-                <input
-                  id="manualSilverPerGram"
-                  data-number-field="manualSilverPerGram"
-                  type="number"
-                  min="0"
-                  step="0.01"
-                  inputmode="decimal"
-                  placeholder="0.00"
-                />
-              </label>
-            </div>
-          </details>
-        </aside>
-      </header>
-
-      <main class="workspace">
-        <aside class="summary-panel surface reveal">
-          <div class="summary-header">
-            <div>
-              <p class="eyebrow">Your result</p>
-              <h2>What is due now</h2>
-            </div>
-            <div id="wealthStatusPill" class="status-pill">Calculating</div>
-          </div>
-
-          <strong id="totalDueAmount" class="total-due">--</strong>
-          <p id="wealthReasonText" class="summary-copy">
-            Enter your figures to see what is obligatory now, what is only an
-            estimate, and which rules changed the result.
-          </p>
-
-          <div class="stat-cluster">
-            <article class="stat-box">
-              <span>Total assets</span>
-              <strong id="assetsTotalValue">--</strong>
-            </article>
-            <article class="stat-box">
-              <span>Liabilities</span>
-              <strong id="liabilitiesTotalValue">--</strong>
-            </article>
-            <article class="stat-box">
-              <span>Net assets</span>
+          <div class="result-stats">
+            <article>
+              <span>Net wealth</span>
               <strong id="netAssetsValue">--</strong>
             </article>
-            <article class="stat-box">
+            <article>
               <span>Chosen nisab</span>
               <strong id="nisabValue">--</strong>
             </article>
+            <article>
+              <span>Wealth zakat</span>
+              <strong id="wealthDueValue">--</strong>
+            </article>
+            <article>
+              <span>Special dues</span>
+              <strong id="specialDueValue">--</strong>
+            </article>
+          </div>
+        </aside>
+      </header>
+
+      <section class="rate-strip reveal">
+        <article class="rate-card surface">
+          <p class="rate-label">Gold reference</p>
+          <strong id="goldPer10gValue">--</strong>
+          <span id="goldPerGramValue">--</span>
+        </article>
+
+        <article class="rate-card surface">
+          <p class="rate-label">Silver reference</p>
+          <strong id="silverPerKgValue">--</strong>
+          <span id="silverPerGramValue">--</span>
+        </article>
+
+        <article class="rate-card surface rate-meta">
+          <p class="rate-label">Rate source</p>
+          <strong id="marketStatusLabel">Loading current rates...</strong>
+          <span id="marketTimestamp">India reference rates will appear here.</span>
+          <button id="refreshPricesButton" class="inline-button" type="button">
+            Refresh rates
+          </button>
+        </article>
+      </section>
+
+      <section class="method-bar surface reveal">
+        <fieldset class="method-group">
+          <legend>Nisab</legend>
+          <div class="segmented">
+            <label>
+              <input type="radio" name="nisabBasis" value="silver" checked />
+              <span>Silver</span>
+            </label>
+            <label>
+              <input type="radio" name="nisabBasis" value="gold" />
+              <span>Gold</span>
+            </label>
+          </div>
+        </fieldset>
+
+        <label class="method-field">
+          <span>Jewelry</span>
+          <select id="jewelryPolicy" aria-label="Jewelry treatment">
+            <option value="exclude-personal">Exclude personal jewelry</option>
+            <option value="include-all">Include all gold and silver jewelry</option>
+          </select>
+        </label>
+
+        <label class="method-field">
+          <span>Debt rule</span>
+          <select id="debtMethod" aria-label="Debt deduction">
+            <option value="due-now">Only what is due now</option>
+            <option value="next-12-months">Include next 12 months</option>
+          </select>
+        </label>
+
+        <label class="check-row" for="hawlCompleted">
+          <input id="hawlCompleted" type="checkbox" checked />
+          <div>
+            <strong>Hawl completed</strong>
+            <span>Uncheck if one lunar year has not passed yet.</span>
+          </div>
+        </label>
+      </section>
+
+      <main class="workspace">
+        <section class="calculator surface reveal">
+          <div class="section-head">
+            <p class="eyebrow">Calculator</p>
+            <h2>Enter your zakatable wealth</h2>
+            <p>
+              Keep it simple. Combine similar items and enter only what you
+              truly own and can access today.
+            </p>
           </div>
 
-          <section class="detail-section">
-            <div class="section-minihead">
-              <h3>What counted</h3>
-              <span id="countedHint">Only positive zakatable items are listed.</span>
+          <div class="field-group">
+            <div class="group-title">
+              <h3>Money and receivables</h3>
+              <p>Cash, bank balances, wallets, and money reliably owed back to you.</p>
             </div>
-            <div id="countedBreakdown" class="detail-list"></div>
+
+            <div class="field-grid">
+              <label class="input-field">
+                <span>Cash, bank, and wallets</span>
+                <input id="liquidCash" type="number" min="0" step="0.01" inputmode="decimal" />
+              </label>
+
+              <label class="input-field">
+                <span>Money owed to you</span>
+                <input id="receivables" type="number" min="0" step="0.01" inputmode="decimal" />
+              </label>
+            </div>
+          </div>
+
+          <div class="field-group">
+            <div class="group-title">
+              <h3>Gold and silver</h3>
+              <p>Enter grams. Live INR rates are applied automatically.</p>
+            </div>
+
+            <div class="field-grid four-up">
+              <label class="input-field">
+                <span>Gold savings (g)</span>
+                <input id="goldSavingsGrams" type="number" min="0" step="0.01" inputmode="decimal" />
+              </label>
+
+              <label class="input-field">
+                <span>Gold jewelry (g)</span>
+                <input id="goldJewelryGrams" type="number" min="0" step="0.01" inputmode="decimal" />
+              </label>
+
+              <label class="input-field">
+                <span>Silver savings (g)</span>
+                <input id="silverSavingsGrams" type="number" min="0" step="0.01" inputmode="decimal" />
+              </label>
+
+              <label class="input-field">
+                <span>Silver jewelry (g)</span>
+                <input id="silverJewelryGrams" type="number" min="0" step="0.01" inputmode="decimal" />
+              </label>
+            </div>
+          </div>
+
+          <div class="field-group">
+            <div class="group-title">
+              <h3>Investments and business</h3>
+              <p>Use current value for tradable assets and stock meant for sale.</p>
+            </div>
+
+            <div class="field-grid three-up">
+              <label class="input-field">
+                <span>Investments and shares</span>
+                <input id="investments" type="number" min="0" step="0.01" inputmode="decimal" />
+              </label>
+
+              <label class="input-field">
+                <span>Business cash and stock</span>
+                <input id="businessAssets" type="number" min="0" step="0.01" inputmode="decimal" />
+              </label>
+
+              <label class="input-field">
+                <span>Other zakatable assets</span>
+                <input id="otherAssets" type="number" min="0" step="0.01" inputmode="decimal" />
+              </label>
+            </div>
+          </div>
+
+          <div class="field-group">
+            <div class="group-title">
+              <h3>Liabilities</h3>
+              <p>Deduct only what is actually payable now, unless you choose the 12-month method.</p>
+            </div>
+
+            <div class="field-grid four-up">
+              <label class="input-field">
+                <span>Debts due now</span>
+                <input id="debtsDueNow" type="number" min="0" step="0.01" inputmode="decimal" />
+              </label>
+
+              <label class="input-field">
+                <span>Bills or taxes due now</span>
+                <input id="billsDueNow" type="number" min="0" step="0.01" inputmode="decimal" />
+              </label>
+
+              <label class="input-field">
+                <span>Next 12-month installments</span>
+                <input id="longTermInstallments" type="number" min="0" step="0.01" inputmode="decimal" />
+              </label>
+
+              <label class="input-field">
+                <span>Zakat already paid in advance</span>
+                <input id="advanceZakatPaid" type="number" min="0" step="0.01" inputmode="decimal" />
+              </label>
+            </div>
+          </div>
+
+          <details class="optional-panel">
+            <summary>Optional categories: crops, livestock, rikaz, and local rate override</summary>
+
+            <div class="optional-grid">
+              <div class="optional-block">
+                <h3>Agriculture</h3>
+                <p>Only if you want to calculate produce zakat separately.</p>
+                <div class="field-grid three-up">
+                  <label class="input-field">
+                    <span>Harvest weight (kg)</span>
+                    <input id="agricultureWeightKg" type="number" min="0" step="0.01" inputmode="decimal" />
+                  </label>
+
+                  <label class="input-field">
+                    <span>Harvest value</span>
+                    <input id="agricultureAssessableValue" type="number" min="0" step="0.01" inputmode="decimal" />
+                  </label>
+
+                  <label class="input-field">
+                    <span>Irrigation</span>
+                    <select id="agricultureIrrigation">
+                      <option value="rain">Rain or natural water (10%)</option>
+                      <option value="mixed">Mixed watering (7.5%)</option>
+                      <option value="artificial">Artificial irrigation (5%)</option>
+                    </select>
+                  </label>
+                </div>
+              </div>
+
+              <div class="optional-block">
+                <h3>Livestock</h3>
+                <p>Shown as in-kind dues if a lunar year has passed.</p>
+                <div class="field-grid three-up">
+                  <label class="input-field">
+                    <span>Camels</span>
+                    <input id="camelsCount" type="number" min="0" step="1" inputmode="numeric" />
+                  </label>
+
+                  <label class="input-field">
+                    <span>Cattle or buffalo</span>
+                    <input id="cattleCount" type="number" min="0" step="1" inputmode="numeric" />
+                  </label>
+
+                  <label class="input-field">
+                    <span>Sheep or goats</span>
+                    <input id="sheepCount" type="number" min="0" step="1" inputmode="numeric" />
+                  </label>
+                </div>
+              </div>
+
+              <div class="optional-block">
+                <h3>Rikaz and manual rates</h3>
+                <p>Use manual rates only if your local Indian market price differs from the live reference.</p>
+                <div class="field-grid three-up">
+                  <label class="input-field">
+                    <span>Rikaz value</span>
+                    <input id="rikazValue" type="number" min="0" step="0.01" inputmode="decimal" />
+                  </label>
+
+                  <label class="input-field">
+                    <span>Manual gold per gram</span>
+                    <input id="manualGoldPerGram" type="number" min="0" step="0.01" inputmode="decimal" />
+                  </label>
+
+                  <label class="input-field">
+                    <span>Manual silver per gram</span>
+                    <input id="manualSilverPerGram" type="number" min="0" step="0.01" inputmode="decimal" />
+                  </label>
+                </div>
+              </div>
+            </div>
+          </details>
+        </section>
+
+        <aside class="insights reveal">
+          <section class="surface note-panel">
+            <div class="panel-head">
+              <h3>How it was counted</h3>
+              <span id="methodSummary">Silver nisab, personal jewelry excluded.</span>
+            </div>
+            <div id="breakdownRows" class="list-stack"></div>
           </section>
 
-          <section class="detail-section">
-            <div class="section-minihead">
-              <h3>What was deducted</h3>
-              <span>Immediate liabilities and adjustments.</span>
-            </div>
-            <div id="deductedBreakdown" class="detail-list"></div>
-          </section>
-
-          <section class="detail-section">
-            <div class="section-minihead">
+          <section class="surface note-panel">
+            <div class="panel-head">
               <h3>Special categories</h3>
-              <span>Crops, livestock, and rikaz are shown separately.</span>
+              <span>Shown separately from annual wealth zakat.</span>
             </div>
-            <div id="specialBreakdown" class="detail-list"></div>
+            <div id="specialRows" class="list-stack"></div>
+            <p id="livestockNote" class="panel-footnote">
+              Livestock dues appear here as animals due in kind.
+            </p>
+          </section>
+
+          <section class="surface note-panel compact">
+            <div class="panel-head">
+              <h3>Need to know</h3>
+              <span>Only the essentials.</span>
+            </div>
+
+            <ul class="plain-list">
+              <li>Your main home, personal car, clothing, and daily-use items are usually excluded.</li>
+              <li>Silver nisab is often used to favor the poor; gold nisab can be selected above.</li>
+              <li>If your local jeweller rate differs from spot, use the manual INR override.</li>
+              <li>Use this as an estimate and ask a scholar for unusual cases.</li>
+            </ul>
           </section>
         </aside>
-
-        <div class="forms-stack">
-          <section class="surface reveal">
-            <div class="section-heading">
-              <p class="eyebrow">Net wealth</p>
-              <h2>Cash, metals, investments, and trade assets</h2>
-              <p>
-                Add what you actually own today and can spend, sell, or recover.
-                Leave personal-use items and doubtful receivables out.
-              </p>
-            </div>
-
-            <div class="form-columns">
-              <fieldset class="input-group">
-                <legend>Cash & receivables</legend>
-
-                <label class="input-field">
-                  <span>Cash on hand</span>
-                  <small>Money in hand, envelopes, lockers, or petty cash.</small>
-                  <input id="cashOnHand" data-money-field="cashOnHand" type="number" min="0" step="0.01" inputmode="decimal" />
-                </label>
-
-                <label class="input-field">
-                  <span>Bank balances</span>
-                  <small>Checking, savings, and balances in any bank account.</small>
-                  <input id="bankBalances" data-money-field="bankBalances" type="number" min="0" step="0.01" inputmode="decimal" />
-                </label>
-
-                <label class="input-field">
-                  <span>Digital wallets</span>
-                  <small>Mobile wallets, stored-value cards, or app balances.</small>
-                  <input id="digitalWallets" data-money-field="digitalWallets" type="number" min="0" step="0.01" inputmode="decimal" />
-                </label>
-
-                <label class="input-field">
-                  <span>Savings for future goals</span>
-                  <small>Money kept aside for Hajj, tuition, marriage, travel, or emergencies.</small>
-                  <input id="savingsForGoals" data-money-field="savingsForGoals" type="number" min="0" step="0.01" inputmode="decimal" />
-                </label>
-
-                <label class="input-field">
-                  <span>Good loans owed back to you</span>
-                  <small>Only include receivables you realistically expect to recover.</small>
-                  <input id="goodLoans" data-money-field="goodLoans" type="number" min="0" step="0.01" inputmode="decimal" />
-                </label>
-              </fieldset>
-
-              <fieldset class="input-group">
-                <legend>Gold & silver</legend>
-
-                <label class="input-field">
-                  <span>Gold held as savings (grams)</span>
-                  <small>Bullion, coins, bars, or gold you keep as wealth.</small>
-                  <input id="goldSavingsGrams" data-number-field="goldSavingsGrams" type="number" min="0" step="0.01" inputmode="decimal" />
-                </label>
-
-                <label class="input-field">
-                  <span>Gold jewelry (grams)</span>
-                  <small>Included only if your jewelry setting says to include it.</small>
-                  <input id="goldJewelryGrams" data-number-field="goldJewelryGrams" type="number" min="0" step="0.01" inputmode="decimal" />
-                </label>
-
-                <label class="input-field">
-                  <span>Silver held as savings (grams)</span>
-                  <small>Coins, bars, or silver kept as wealth.</small>
-                  <input id="silverSavingsGrams" data-number-field="silverSavingsGrams" type="number" min="0" step="0.01" inputmode="decimal" />
-                </label>
-
-                <label class="input-field">
-                  <span>Silver jewelry (grams)</span>
-                  <small>Included only if your jewelry setting says to include it.</small>
-                  <input id="silverJewelryGrams" data-number-field="silverJewelryGrams" type="number" min="0" step="0.01" inputmode="decimal" />
-                </label>
-              </fieldset>
-
-              <fieldset class="input-group">
-                <legend>Investments</legend>
-
-                <label class="input-field">
-                  <span>Stocks, ETFs, mutual funds</span>
-                  <small>Use current market value for tradable holdings.</small>
-                  <input id="stocksFunds" data-money-field="stocksFunds" type="number" min="0" step="0.01" inputmode="decimal" />
-                </label>
-
-                <label class="input-field">
-                  <span>Crypto assets</span>
-                  <small>Use current market value of your crypto holdings.</small>
-                  <input id="crypto" data-money-field="crypto" type="number" min="0" step="0.01" inputmode="decimal" />
-                </label>
-
-                <label class="input-field">
-                  <span>Accessible retirement funds</span>
-                  <small>Use the amount you could actually withdraw after fees or taxes.</small>
-                  <input id="retirementAccessible" data-money-field="retirementAccessible" type="number" min="0" step="0.01" inputmode="decimal" />
-                </label>
-
-                <label class="input-field">
-                  <span>Property held for resale</span>
-                  <small>Only include real estate or plots that are trade inventory, not your home.</small>
-                  <input id="realEstateForSale" data-money-field="realEstateForSale" type="number" min="0" step="0.01" inputmode="decimal" />
-                </label>
-
-                <label class="input-field">
-                  <span>Other liquid investments</span>
-                  <small>Anything else readily saleable and owned as wealth.</small>
-                  <input id="otherInvestments" data-money-field="otherInvestments" type="number" min="0" step="0.01" inputmode="decimal" />
-                </label>
-              </fieldset>
-
-              <fieldset class="input-group">
-                <legend>Business & income</legend>
-
-                <label class="input-field">
-                  <span>Business cash</span>
-                  <small>Cash held in the business or merchant float.</small>
-                  <input id="businessCash" data-money-field="businessCash" type="number" min="0" step="0.01" inputmode="decimal" />
-                </label>
-
-                <label class="input-field">
-                  <span>Business inventory</span>
-                  <small>Estimate wholesale or current sale value of trade goods.</small>
-                  <input id="businessInventory" data-money-field="businessInventory" type="number" min="0" step="0.01" inputmode="decimal" />
-                </label>
-
-                <label class="input-field">
-                  <span>Business receivables</span>
-                  <small>Only include invoices and debts you expect to collect.</small>
-                  <input id="businessReceivables" data-money-field="businessReceivables" type="number" min="0" step="0.01" inputmode="decimal" />
-                </label>
-
-                <label class="input-field">
-                  <span>Net rental income on hand</span>
-                  <small>Include retained rental profit, not the rented property itself.</small>
-                  <input id="rentalNetIncome" data-money-field="rentalNetIncome" type="number" min="0" step="0.01" inputmode="decimal" />
-                </label>
-
-                <label class="input-field">
-                  <span>Other zakatable assets</span>
-                  <small>Use for any extra liquid or tradeable wealth not covered above.</small>
-                  <input id="otherZakatableAssets" data-money-field="otherZakatableAssets" type="number" min="0" step="0.01" inputmode="decimal" />
-                </label>
-              </fieldset>
-            </div>
-          </section>
-
-          <section class="surface reveal">
-            <div class="section-heading">
-              <p class="eyebrow">Liabilities</p>
-              <h2>Deduct what is presently due</h2>
-              <p>
-                Keep deductions conservative. The calculator can use either only
-                immediate dues or the next 12 months of scheduled installments.
-              </p>
-            </div>
-
-            <div class="form-columns tight">
-              <fieldset class="input-group">
-                <legend>Debts & obligations</legend>
-
-                <label class="input-field">
-                  <span>Debts due now</span>
-                  <small>Loans, goods bought on credit, or personal debts already payable.</small>
-                  <input id="debtsDueNow" data-money-field="debtsDueNow" type="number" min="0" step="0.01" inputmode="decimal" />
-                </label>
-
-                <label class="input-field">
-                  <span>Bills due now</span>
-                  <small>Rent, utilities, tuition, medical costs, or similar dues already payable.</small>
-                  <input id="billsDueNow" data-money-field="billsDueNow" type="number" min="0" step="0.01" inputmode="decimal" />
-                </label>
-
-                <label class="input-field">
-                  <span>Taxes or wages due</span>
-                  <small>Amounts already due to the state, staff, or contractors.</small>
-                  <input id="taxesAndWagesDue" data-money-field="taxesAndWagesDue" type="number" min="0" step="0.01" inputmode="decimal" />
-                </label>
-
-                <label class="input-field">
-                  <span>Installments due within 12 months</span>
-                  <small>Only counted if you select the 12-month debt method above.</small>
-                  <input id="longTermInstallments" data-money-field="longTermInstallments" type="number" min="0" step="0.01" inputmode="decimal" />
-                </label>
-
-                <label class="input-field">
-                  <span>Zakat already paid in advance</span>
-                  <small>This reduces the final amount due but does not reduce your asset total.</small>
-                  <input id="advanceZakatPaid" data-money-field="advanceZakatPaid" type="number" min="0" step="0.01" inputmode="decimal" />
-                </label>
-              </fieldset>
-            </div>
-          </section>
-
-          <section class="surface reveal">
-            <div class="section-heading">
-              <p class="eyebrow">Special categories</p>
-              <h2>Crops, livestock, and rikaz</h2>
-              <p>
-                These are not treated exactly like ordinary 2.5% net wealth. They
-                have their own thresholds and rules.
-              </p>
-            </div>
-
-            <div class="form-columns">
-              <fieldset class="input-group">
-                <legend>Agricultural produce</legend>
-
-                <label class="input-field">
-                  <span>Harvest weight (kg)</span>
-                  <small>The nisab used here is approximately 653 kg (five wasqs).</small>
-                  <input id="agricultureWeightKg" data-number-field="agricultureWeightKg" type="number" min="0" step="0.01" inputmode="decimal" />
-                </label>
-
-                <label class="input-field">
-                  <span>Assessable harvest value</span>
-                  <small>Use the value you want the percentage applied to at harvest time.</small>
-                  <input id="agricultureAssessableValue" data-money-field="agricultureAssessableValue" type="number" min="0" step="0.01" inputmode="decimal" />
-                </label>
-
-                <label class="control-field">
-                  <span>Irrigation method</span>
-                  <select id="agricultureIrrigation">
-                    <option value="rain">Rain or natural water (10%)</option>
-                    <option value="mixed">Mixed watering (7.5%)</option>
-                    <option value="artificial">Artificial irrigation (5%)</option>
-                  </select>
-                </label>
-              </fieldset>
-
-              <fieldset class="input-group">
-                <legend>Livestock</legend>
-
-                <label class="input-field">
-                  <span>Camels</span>
-                  <small>For grazing camels held through a lunar year.</small>
-                  <input id="camelsCount" data-number-field="camelsCount" type="number" min="0" step="1" inputmode="numeric" />
-                </label>
-
-                <label class="input-field">
-                  <span>Cattle / buffalo</span>
-                  <small>For grazing herds, not fixed-value trade inventory.</small>
-                  <input id="cattleCount" data-number-field="cattleCount" type="number" min="0" step="1" inputmode="numeric" />
-                </label>
-
-                <label class="input-field">
-                  <span>Sheep / goats</span>
-                  <small>For grazing flocks held through a lunar year.</small>
-                  <input id="sheepCount" data-number-field="sheepCount" type="number" min="0" step="1" inputmode="numeric" />
-                </label>
-              </fieldset>
-
-              <fieldset class="input-group">
-                <legend>Rikaz</legend>
-
-                <label class="input-field">
-                  <span>Buried treasure / rikaz value</span>
-                  <small>The calculator applies one-fifth immediately, separate from your annual hawl.</small>
-                  <input id="rikazValue" data-money-field="rikazValue" type="number" min="0" step="0.01" inputmode="decimal" />
-                </label>
-              </fieldset>
-            </div>
-          </section>
-
-          <section class="surface reveal">
-            <div class="section-heading">
-              <p class="eyebrow">Methodology</p>
-              <h2>What is included, what is not, and why</h2>
-              <p>
-                This page is an educational aid, not a fatwa. It aims to stay simple
-                while staying close to core texts and widely used contemporary guidance.
-              </p>
-            </div>
-
-            <div class="method-grid">
-              <article class="method-card">
-                <h3>Usually excluded from wealth zakat</h3>
-                <ul class="plain-list" id="excludedList">
-                  <li>Your primary home and normal household furniture.</li>
-                  <li>Your personal car, clothing, phones, and daily-use items.</li>
-                  <li>Business equipment and fixed assets not held for sale.</li>
-                  <li>Doubtful receivables you do not reasonably expect back.</li>
-                </ul>
-              </article>
-
-              <article class="method-card">
-                <h3>Who can receive zakat</h3>
-                <ul class="plain-list">
-                  <li>The poor.</li>
-                  <li>The needy.</li>
-                  <li>Those assigned to administer zakat.</li>
-                  <li>Those whose hearts are to be reconciled.</li>
-                  <li>For freeing people from bondage.</li>
-                  <li>People in debt.</li>
-                  <li>For the cause of Allah.</li>
-                  <li>The stranded traveller.</li>
-                </ul>
-              </article>
-
-              <article class="method-card method-card-wide">
-                <h3>Primary references and data sources</h3>
-                <div class="source-grid">
-                  <a href="https://quran.com/9/103" target="_blank" rel="noreferrer">
-                    Qur'an 9:103
-                    <span>Zakat purifies and blesses wealth.</span>
-                  </a>
-                  <a href="https://previous.quran.com/9/60" target="_blank" rel="noreferrer">
-                    Qur'an 9:60
-                    <span>The eight recipient categories of zakat.</span>
-                  </a>
-                  <a href="https://sunnah.com/muslim:979f" target="_blank" rel="noreferrer">
-                    Sahih Muslim 979f
-                    <span>Thresholds for silver, camels, and produce.</span>
-                  </a>
-                  <a href="https://sunnah.com/search?q=1573" target="_blank" rel="noreferrer">
-                    Sunan Abi Dawud 1573
-                    <span>200 dirhams, 20 dinars, and the hawl principle.</span>
-                  </a>
-                  <a href="https://sunnah.com/bukhari/24" target="_blank" rel="noreferrer">
-                    Sahih al-Bukhari 1454
-                    <span>Sheep, camels, and one-fortieth on silver.</span>
-                  </a>
-                  <a href="https://sunnah.com/abudawud:1572" target="_blank" rel="noreferrer">
-                    Sunan Abi Dawud 1572
-                    <span>Livestock detail including cattle thresholds.</span>
-                  </a>
-                  <a href="https://sunnah.com/bukhari:1483" target="_blank" rel="noreferrer">
-                    Sahih al-Bukhari 1483
-                    <span>10% rain-fed crops, 5% artificially irrigated crops.</span>
-                  </a>
-                  <a href="https://sunnah.com/bukhari/87/50-51" target="_blank" rel="noreferrer">
-                    Sahih al-Bukhari 6912
-                    <span>One-fifth due on rikaz.</span>
-                  </a>
-                  <a href="https://islamic-relief.org/zakat-calculator/" target="_blank" rel="noreferrer">
-                    Islamic Relief
-                    <span>Contemporary nisab values and debt guidance.</span>
-                  </a>
-                  <a href="https://www.zakat.org/resource-center/zakat-business" target="_blank" rel="noreferrer">
-                    Zakat Foundation
-                    <span>Business, receivables, retirement, and trade-asset treatment.</span>
-                  </a>
-                  <a href="https://www.zakat.org/is-there-zakat-on-jewelry/" target="_blank" rel="noreferrer">
-                    Zakat on jewelry
-                    <span>The calculator exposes the jewelry difference as a toggle.</span>
-                  </a>
-                  <a href="https://frankfurter.dev/" target="_blank" rel="noreferrer">
-                    Frankfurter API
-                    <span>Current exchange-rate conversion for the selected currency.</span>
-                  </a>
-                  <a href="https://gold-api.com/docs" target="_blank" rel="noreferrer">
-                    Gold API
-                    <span>Live XAU and XAG spot pricing used for current metal values.</span>
-                  </a>
-                </div>
-              </article>
-            </div>
-          </section>
-        </div>
       </main>
 
-      <footer class="page-footer">
-        Built for simple worldwide zakat estimation. Review unusual cases with a
-        qualified scholar, especially mixed assets, complex business structures,
-        or school-specific rulings.
+      <footer class="site-footer">
+        Built around core zakat rules on nisab, hawl, produce, rikaz, and livestock.
+        References:
+        <a href="https://quran.com/9/60" target="_blank" rel="noreferrer">Qur'an 9:60</a>,
+        <a href="https://quran.com/9/103" target="_blank" rel="noreferrer">Qur'an 9:103</a>,
+        <a href="https://sunnah.com/muslim:979f" target="_blank" rel="noreferrer">Sahih Muslim 979f</a>,
+        <a href="https://sunnah.com/abudawud:1572" target="_blank" rel="noreferrer">Abi Dawud 1572</a>,
+        <a href="https://sunnah.com/search?q=1573" target="_blank" rel="noreferrer">Abi Dawud 1573</a>.
       </footer>
     </div>
 
